@@ -81,7 +81,7 @@ std::pair<Property, SimpleVariant> processCanMessage(const std::vector<std::uint
     //decode value with little endian
     const std::uint16_t value_le{static_cast<std::uint16_t>((byte2 << 8U) | byte1)};
     // decode receiver CAN ID 
-    const std::uint16_t receiver_id = (msg[1U] & 0x0F) | ((msg[0U] & 0xF0) << 8U);
+    const std::uint16_t receiver_id = (msg[1U] & 0x0F) + ((msg[0U] & 0xF0) * 8);
 
     //detect if it is a Read Write or broadcast message
     if (msg[0] & 0x01) {
