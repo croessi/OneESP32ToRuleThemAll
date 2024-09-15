@@ -81,18 +81,18 @@ std::pair<Property, SimpleVariant> processCanMessage(const std::vector<std::uint
     //decode value with little endian
     const std::uint16_t value_le{static_cast<std::uint16_t>((byte2 << 8U) | byte1)};
     // decode receiver CAN ID 
-    const std::uint16_t receiver_id = (msg[1U] & 0x0F) + ((msg[0U] & 0xF0) * 8);
+    const std::uint16_t receiver_id = ((msg[0U] & 0xF0) * 8) + (msg[1U] & 0x0F);
 
     //detect if it is a Read Write or broadcast message
     if (msg[0] & 0x01) {
-        ESP_LOGI("Communication", "Message received: Read from CAN ID 0x%03x for property 0x%04x %s ID 0x%02x 0x%02x ",
+        ESP_LOGI("Communication", "Message received: Read from CAN ID 0x%04x for property 0x%04x %s ID 0x%02x 0x%02x ",
              receiver_id, property.id, std::string(property.name).c_str(),msg[0U], msg[1U]);
     }
     else if (msg[0] & 0x02) {
-        ESP_LOGI("Communication", "Message received: Write to CAN ID 0x%03x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
+        ESP_LOGI("Communication", "Message received: Write to CAN ID 0x%04x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
              receiver_id, property.id, std::string(property.name).c_str(), value, value_le,msg[0U], msg[1U]);
     }
-    else ESP_LOGI ("Communication", "Message received: Broadcast to 0x%03x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
+    else ESP_LOGI ("Communication", "Message received: Broadcast to 0x%04x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
              receiver_id, property.id, std::string(property.name).c_str(), value, value_le,msg[0U], msg[1U]);
 
     #else
@@ -117,7 +117,7 @@ void requestData(const CanMember& member, const Property& property) {
     const std::uint8_t IndexByte2{static_cast<std::uint8_t>(property & 0xff)};
     std::vector<std::uint8_t> data;
 
-    data.insert(data.end(), {IdByte1, IdByte2, 0xfa, IndexByte1, IndexByte2, 0x00, 0x00});
+    data.insert(data.end(), {member.getReadId1(), member.getReadId2(), 0xfa, IndexByte1, IndexByte2, 0x00, 0x00});
 
     id(my_mcp2515).send_data(ESPClient.CanId, use_extended_id, data);
 }
@@ -138,7 +138,7 @@ void sendData(const CanMember& member, const Property property, const std::uint1
     const std::uint8_t ValueByte2{static_cast<std::uint8_t>(value & 0xff)};
     std::vector<std::uint8_t> data;
 
-    data.insert(data.end(), {IdByte1, IdByte2, 0xfa, IndexByte1, IndexByte2, ValueByte1, ValueByte2});
+    data.insert(data.end(), {member.getWriteId1(), member.getWriteId2(), 0xfa, IndexByte1, IndexByte2, ValueByte1, ValueByte2});
 
     id(my_mcp2515).send_data(ESPClient.CanId, use_extended_id, data);
 }
