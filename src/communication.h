@@ -85,11 +85,11 @@ std::pair<Property, SimpleVariant> processCanMessage(const std::vector<std::uint
 
     //detect if it is a Read Write or broadcast message
     if (msg[0] & 0x01) {
-        ESP_LOGI("Communication", "Message received: Read from CAN ID 0x%04x for property 0x%04x %s ID 0x%02x 0x%02x ",
+        ESP_LOGI("Communication", "Message received: Request from CAN ID 0x%04x for property 0x%04x %s ID 0x%02x 0x%02x ",
              receiver_id, property.id, std::string(property.name).c_str(),msg[0U], msg[1U]);
     }
     else if (msg[0] & 0x02) {
-        ESP_LOGI("Communication", "Message received: Write to CAN ID 0x%04x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
+        ESP_LOGI("Communication", "Message received: Response to CAN ID 0x%04x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
              receiver_id, property.id, std::string(property.name).c_str(), value, value_le,msg[0U], msg[1U]);
     }
     else ESP_LOGI ("Communication", "Message received: Broadcast to 0x%04x for property 0x%04x %s with raw value: %d (little endian: %d) ID 0x%02x 0x%02x",
@@ -104,6 +104,7 @@ std::pair<Property, SimpleVariant> processCanMessage(const std::vector<std::uint
 
 
     if (isRequest(msg)) {
+        ESP_LOGI("Communication", "Is Request");
         return {Property::kINDEX_NOT_FOUND, value};
     }
     return {property, GetValueByType(value, property.type)};
